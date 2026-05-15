@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>People & Culture Copilot Hub · CCS</title>
+
+<!-- Tailwind via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- FontAwesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<!-- Distinctive type pairing: Fraunces (warm serif) + Plus Jakarta Sans (refined sans) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          serif: ['Fraunces', 'Georgia', 'serif'],
+          sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          ivory:   { 50: '#FBF9F4', 100: '#F6F2E9', 200: '#EDE6D4' },
+          slate2:  { 700: '#2E3640', 800: '#22282F', 900: '#181C21' },
+          sage:    { 100: '#E6EFE7', 200: '#C9DDCB', 400: '#7AA481', 500: '#5C8C66', 600: '#456C50', 700: '#34543E' },
+          sky2:    { 100: '#E6EEF4', 400: '#7BA0BC', 500: '#5A85A6' },
+          blush:   { 100: '#F6E9E2', 400: '#D49980' },
+        },
+        boxShadow: {
+          soft:  '0 1px 2px rgba(34,40,47,0.04), 0 4px 16px rgba(34,40,47,0.06)',
+          lift:  '0 4px 8px rgba(34,40,47,0.05), 0 12px 32px rgba(34,40,47,0.08)',
+          inset: 'inset 0 0 0 1px rgba(34,40,47,0.06)',
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  html, body { background: #FBF9F4; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #22282F;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .font-serif { font-feature-settings: "ss01", "ss02"; letter-spacing: -0.01em; }
+
+  /* Paper-textured background */
+  .paper-bg {
+    background-color: #FBF9F4;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(122,164,129,0.06), transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(123,160,188,0.05), transparent 45%);
+  }
+
+  /* AI Copilot card — soft aurora */
+  .aurora {
+    background:
+      radial-gradient(120% 120% at 0% 0%, rgba(122,164,129,0.18), transparent 60%),
+      radial-gradient(100% 100% at 100% 0%, rgba(123,160,188,0.18), transparent 60%),
+      radial-gradient(100% 100% at 50% 100%, rgba(212,153,128,0.12), transparent 60%),
+      #FFFDF7;
+    border: 1px solid rgba(69,108,80,0.18);
+  }
+  .ai-sparkle {
+    background: linear-gradient(135deg, #5C8C66 0%, #5A85A6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Tab buttons */
+  .tab-btn {
+    transition: all .25s ease;
+    position: relative;
+  }
+  .tab-btn[data-active="true"] {
+    background: #FBF9F4;
+    color: #22282F;
+    box-shadow: inset 3px 0 0 #5C8C66;
+  }
+  .tab-btn[data-active="true"] .tab-icon { color: #5C8C66; }
+  .tab-btn:not([data-active="true"]):hover { background: rgba(255,255,255,0.04); color: #FBF9F4; }
+
+  /* Tab views */
+  .tab-view { display: none; animation: fadeUp .45s ease both; }
+  .tab-view.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Progress bar */
+  .meter-track { background: #EDE6D4; border-radius: 999px; overflow: hidden; height: 10px; }
+  .meter-fill {
+    height: 100%;
+    border-radius: 999px;
+    width: 0;
+    transition: width 1.2s cubic-bezier(.2,.7,.2,1);
+    background: linear-gradient(90deg, #7AA481, #5C8C66);
+  }
+  .meter-fill.warn { background: linear-gradient(90deg, #D49980, #C57A5C); }
+  .meter-fill.sky  { background: linear-gradient(90deg, #7BA0BC, #5A85A6); }
+
+  /* Checklist items */
+  .check-item {
+    display: flex; align-items: center; gap: .85rem;
+    padding: .85rem 1rem;
+    background: #FFFDF7;
+    border: 1px solid #EDE6D4;
+    border-radius: 14px;
+    transition: all .2s ease;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(6px);
+    animation: itemIn .45s ease forwards;
+  }
+  .check-item:hover { border-color: #C9DDCB; background: #FFFFFF; box-shadow: 0 2px 8px rgba(34,40,47,0.05); }
+  .check-item.done .cb {
+    background: #5C8C66; border-color: #5C8C66;
+  }
+  .check-item.done .cb i { opacity: 1; transform: scale(1); }
+  .check-item.done .label { text-decoration: line-through; color: #6B7280; }
+  .cb {
+    flex-shrink: 0;
+    width: 22px; height: 22px; border-radius: 7px;
+    border: 1.5px solid #C9DDCB; background: #FBF9F4;
+    display: grid; place-items: center;
+    transition: all .2s ease;
+  }
+  .cb i { color: white; font-size: 11px; opacity: 0; transform: scale(0.5); transition: all .2s ease; }
+  @keyframes itemIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Form inputs */
+  .field {
+    width: 100%;
+    padding: .75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid #EDE6D4;
+    background: #FFFDF7;
+    font-family: inherit;
+    font-size: .95rem;
+    color: #22282F;
+    transition: all .2s;
+  }
+  .field:focus {
+    outline: none;
+    border-color: #7AA481;
+    box-shadow: 0 0 0 4px rgba(122,164,129,0.15);
+    background: #FFFFFF;
+  }
+  .field-label {
+    font-size: .75rem; font-weight: 600;
+    color: #6B7280; text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .4rem;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    background: #22282F;
+    color: #FBF9F4;
+    padding: .8rem 1.4rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: .9rem;
+    letter-spacing: .01em;
+    transition: all .25s ease;
+    display: inline-flex; align-items: center; gap: .6rem;
+    border: 1px solid #22282F;
+  }
+  .btn-primary:hover {
+    background: #5C8C66;
+    border-color: #5C8C66;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(92,140,102,0.25);
+  }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    background: transparent;
+    color: #22282F;
+    padding: .55rem 1rem;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: .85rem;
+    border: 1px solid #EDE6D4;
+    transition: all .2s ease;
+  }
+  .btn-ghost:hover { background: #FFFDF7; border-color: #C9DDCB; }
+
+  /* Number ticker */
+  .ticker { font-variant-numeric: tabular-nums; }
+
+  /* Scrollbar refinement */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #EDE6D4; border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #C9DDCB; }
+
+  /* Decorative wavy underline */
+  .wavy {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 8'%3E%3Cpath d='M0 4 Q 5 0 10 4 T 20 4 T 30 4 T 40 4' stroke='%235C8C66' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-position: 0 100%;
+    background-size: 20px 6px;
+    padding-bottom: 10px;
+  }
+
+  /* Toast notification */
+  #toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: #22282F;
+    color: #FBF9F4;
+    padding: .8rem 1.2rem;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(34,40,47,0.2);
+    font-size: .9rem;
+    transform: translateY(80px); opacity: 0;
+    transition: all .35s cubic-bezier(.2,.7,.2,1);
+    z-index: 100;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+
+  /* Pulse for live indicator */
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
+  }
+  .live-dot { animation: pulse-soft 2s ease-in-out infinite; }
+</style>
+</head>
+
+<body class="paper-bg min-h-screen">
+
+<div class="flex min-h-screen">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="w-72 bg-slate2-900 text-ivory-50 flex flex-col flex-shrink-0">
+
+    <!-- Logo / Brand -->
+    <div class="px-6 pt-7 pb-6 border-b border-white/5">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-sage-500/20 grid place-items-center ring-1 ring-sage-400/40">
+          <i class="fa-solid fa-seedling text-sage-400"></i>
+        </div>
+        <div>
+          <div class="font-serif text-lg leading-tight">CCS</div>
+          <div class="text-[11px] uppercase tracking-widest text-ivory-50/50">People & Culture</div>
+        </div>
+      </div>
+      <p class="mt-5 text-[13px] italic text-ivory-50/60 font-serif leading-relaxed">
+        "We Help. We Educate.<br/>We Give Hope."
+      </p>
+    </div>
+
+    <!-- Tabs -->
+    <nav class="flex-1 py-5">
+      <div class="px-6 mb-3 text-[10px] uppercase tracking-widest text-ivory-50/40">Workspace</div>
+
+      <button class="tab-btn w-full text-left px-6 py-3 flex items-center gap-3 text-ivory-50/75" data-tab="engagement" data-active="true">
+        <i class="fa-solid fa-chart-line tab-icon text-ivory-50/50 w-4"></i>
+        <span class="text-sm font-medium">Engagement Insights</span>
+      </button>
+
+      <button class="tab-btn w-full text-left px-6 py-3 flex items-center gap-3 text-ivory-50/75" data-tab="culture">
+        <i class="fa-solid fa-champagne-glasses tab-icon text-ivory-50/50 w-4"></i>
+        <span class="text-sm font-medium">Culture Club Planner</span>
+      </button>
+
+      <button class="tab-btn w-full text-left px-6 py-3 flex items-center gap-3 text-ivory-50/75" data-tab="benefits">
+        <i class="fa-solid fa-calculator tab-icon text-ivory-50/50 w-4"></i>
+        <span class="text-sm font-medium">Benefits Calculator</span>
+      </button>
+
+      <div class="px-6 mt-8 mb-3 text-[10px] uppercase tracking-widest text-ivory-50/40">Status</div>
+      <div class="px-6 space-y-2.5 text-xs text-ivory-50/60">
+        <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-sage-400 live-dot"></span> Survey window open</div>
+        <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-ivory-50/40 text-[10px]"></i> New Westminster · Hybrid</div>
+        <div class="flex items-center gap-2"><i class="fa-solid fa-users text-ivory-50/40 text-[10px]"></i> 84 team members</div>
+      </div>
+    </nav>
+
+    <!-- Profile -->
+    <div class="border-t border-white/5 px-6 py-5 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-blush-100 text-slate2-900 grid place-items-center font-serif font-semibold">A</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-medium truncate">Alex Morgan</div>
+        <div class="text-[11px] text-ivory-50/50">P&C Assistant</div>
+      </div>
+      <button class="text-ivory-50/40 hover:text-ivory-50 transition"><i class="fa-solid fa-gear text-sm"></i></button>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="flex-1 min-w-0">
+
+    <!-- Top bar -->
+    <header class="px-10 pt-8 pb-6 flex items-center justify-between border-b border-ivory-200/60">
+      <div>
+        <div class="text-xs uppercase tracking-widest text-slate2-700/50 mb-1">Friday · May 15</div>
+        <h1 class="font-serif text-3xl text-slate2-900">Good morning, Alex.</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="btn-ghost"><i class="fa-regular fa-bell mr-1.5"></i> 3 updates</button>
+        <button class="btn-ghost"><i class="fa-solid fa-magnifying-glass mr-1.5"></i> Search</button>
+        <button class="btn-primary"><i class="fa-solid fa-plus"></i> Quick action</button>
+      </div>
+    </header>
+
+    <!-- ============ TAB 1: ENGAGEMENT INSIGHTS ============ -->
+    <section id="tab-engagement" class="tab-view active px-10 py-8">
+
+      <!-- AI Copilot banner -->
+      <div class="aurora rounded-2xl p-6 shadow-soft mb-8">
+        <div class="flex items-start gap-5">
+          <div class="w-12 h-12 rounded-xl bg-white/70 grid place-items-center ring-1 ring-sage-200 flex-shrink-0">
+            <i class="fa-solid fa-wand-magic-sparkles text-lg ai-sparkle"></i>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xs uppercase tracking-widest font-semibold ai-sparkle">GenAI Insight Copilot</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-sage-100 text-sage-700 font-semibold">DRAFT · YOUR REVIEW</span>
+            </div>
+            <p class="text-slate2-800 leading-relaxed">
+              <span class="font-serif text-lg">Sentiment is strong overall (avg 88%)</span> — but <strong>Remote Alignment dipped 3%</strong> versus last month, and bilingual Slack channels saw <strong>22% less engagement</strong>. The Culture Club hasn't hosted a virtual mixer in 6 weeks.
+            </p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <span class="text-[11px] uppercase tracking-wider font-semibold text-slate2-700/60 mr-1 pt-1.5">Suggested next steps:</span>
+              <button class="btn-ghost text-xs"><i class="fa-solid fa-mug-hot mr-1.5 text-sage-600"></i> Schedule virtual coffee mixer</button>
+              <button class="btn-ghost text-xs"><i class="fa-solid fa-comments mr-1.5 text-sky2-500"></i> Bilingual channel check-in</button>
+              <button class="btn-ghost text-xs"><i class="fa-solid fa-clipboard-question mr-1.5 text-blush-400"></i> Pulse poll: remote teams</button>
+            </div>
+            <p class="mt-4 text-xs text-slate2-700/60 italic">
+              <i class="fa-solid fa-circle-info mr-1"></i> Copilot drafts are starting points — final judgment belongs to a human who knows the team.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top stats -->
+      <div class="grid grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-2xl p-5 shadow-soft border border-ivory-200/60">
+          <div class="text-xs uppercase tracking-widest text-slate2-700/50 mb-2">Response rate</div>
+          <div class="flex items-baseline gap-2">
+            <span class="font-serif text-3xl text-slate2-900 ticker">94<span class="text-xl text-slate2-700/50">%</span></span>
+            <span class="text-xs text-sage-600 font-semibold"><i class="fa-solid fa-arrow-up"></i> 6</span>
+          </div>
+          <div class="text-xs text-slate2-700/50 mt-1">79 of 84 responses</div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-soft border border-ivory-200/60">
+          <div class="text-xs uppercase tracking-widest text-slate2-700/50 mb-2">eNPS</div>
+          <div class="flex items-baseline gap-2">
+            <span class="font-serif text-3xl text-slate2-900 ticker">+62</span>
+            <span class="text-xs text-sage-600 font-semibold"><i class="fa-solid fa-arrow-up"></i> 4</span>
+          </div>
+          <div class="text-xs text-slate2-700/50 mt-1">"Great Place to Work" tier</div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-soft border border-ivory-200/60">
+          <div class="text-xs uppercase tracking-widest text-slate2-700/50 mb-2">Avg tenure</div>
+          <div class="flex items-baseline gap-2">
+            <span class="font-serif text-3xl text-slate2-900 ticker">4.2<span class="text-xl text-slate2-700/50"> yr</span></span>
+          </div>
+          <div class="text-xs text-slate2-700/50 mt-1">+0.3 vs sector avg</div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-soft border border-ivory-200/60">
+          <div class="text-xs uppercase tracking-widest text-slate2-700/50 mb-2">Milestones this Q</div>
+          <div class="flex items-baseline gap-2">
+            <span class="font-serif text-3xl text-slate2-900 ticker">11</span>
+          </div>
+          <div class="text-xs text-slate2-700/50 mt-1">2 moves · 1 wedding · 1 baby</div>
+        </div>
+      </div>
+
+      <!-- Sentiment grid + Themes -->
+      <div class="grid grid-cols-3 gap-6">
+
+        <!-- Sentiment metrics -->
+        <div class="col-span-2 bg-white rounded-2xl p-7 shadow-soft border border-ivory-200/60">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="font-serif text-2xl text-slate2-900 wavy inline-block">Employee Sentiment</h2>
+              <p class="text-sm text-slate2-700/60 mt-2">Q2 pulse · 79 responses · refreshed 2h ago</p>
+            </div>
+            <button class="btn-ghost text-xs"><i class="fa-solid fa-download mr-1.5"></i> Export</button>
+          </div>
+
+          <div class="space-y-5" id="sentimentBars">
+            <!-- bars rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Recurring themes -->
+        <div class="bg-white rounded-2xl p-7 shadow-soft border border-ivory-200/60">
+          <h3 class="font-serif text-xl text-slate2-900 mb-1">What teams are saying</h3>
+          <p class="text-xs text-slate2-700/50 mb-5">Themes synthesized from open responses</p>
+
+          <div class="space-y-3">
+            <div class="p-3.5 rounded-xl bg-sage-100/60 border border-sage-200">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-semibold text-sage-700 uppercase tracking-wider">Praise</span>
+                <span class="text-xs text-sage-700/70">31 mentions</span>
+              </div>
+              <p class="text-sm text-slate2-800 font-serif italic">"My manager genuinely cares — the milestone gift after our move meant everything."</p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-sky2-100/60 border border-sky2-100">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-semibold text-sky2-500 uppercase tracking-wider">Suggestion</span>
+                <span class="text-xs text-sky2-500/70">18 mentions</span>
+              </div>
+              <p class="text-sm text-slate2-800 font-serif italic">"More structured hybrid moments — Tuesdays feel disconnected when half the team is remote."</p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-blush-100/60 border border-blush-100">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-semibold text-blush-400 uppercase tracking-wider">Watch</span>
+                <span class="text-xs text-blush-400/70">7 mentions</span>
+              </div>
+              <p class="text-sm text-slate2-800 font-serif italic">"The bilingual credit is great but the process to request it isn't always clear."</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TAB 2: CULTURE CLUB PLANNER ============ -->
+    <section id="tab-culture" class="tab-view px-10 py-8">
+
+      <div class="mb-8">
+        <div class="text-xs uppercase tracking-widest text-slate2-700/50 mb-2">Culture Club · Social Society</div>
+        <h2 class="font-serif text-3xl text-slate2-900">Plan a moment that matters.</h2>
+        <p class="text-slate2-700/70 mt-2 max-w-2xl">Generate a thoughtful blueprint for team events and life milestones. Every checklist below is editable — the Copilot is the scaffolding; the warmth is yours.</p>
+      </div>
+
+      <div class="grid grid-cols-3 gap-6">
+
+        <!-- LEFT: Event builder (2 cols) -->
+        <div class="col-span-2 space-y-6">
+
+          <!-- Builder form -->
+          <div class="bg-white rounded-2xl p-7 shadow-soft border border-ivory-200/60">
+            <div class="flex items-center gap-2 mb-5">
+              <i class="fa-solid fa-wand-magic-sparkles ai-sparkle"></i>
+              <h3 class="font-serif text-xl text-slate2-900">Event blueprint generator</h3>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-5">
+              <div>
+                <div class="field-label">Event type</div>
+                <select id="eventType" class="field">
+                  <option value="hybrid">Hybrid Team Bonding</option>
+                  <option value="moving">Milestone: Employee Moving</option>
+                  <option value="marriage">Milestone: Marriage / New Child</option>
+                  <option value="annual">Annual Performance Celebration</option>
+                </select>
+              </div>
+              <div>
+                <div class="field-label">Employee or team</div>
+                <input class="field" placeholder="e.g. Priya Sharma · Finance team" />
+              </div>
+              <div>
+                <div class="field-label">Target date</div>
+                <input type="date" class="field" />
+              </div>
+              <div>
+                <div class="field-label">Estimated headcount</div>
+                <input class="field" type="number" placeholder="12" min="1" />
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <p class="text-xs text-slate2-700/50 italic"><i class="fa-solid fa-circle-info mr-1"></i> Blueprints aligned with CCS culture & milestone benefits.</p>
+              <button id="generateBtn" class="btn-primary"><i class="fa-solid fa-sparkles"></i> Generate blueprint</button>
+            </div>
+          </div>
+
+          <!-- Generated checklist -->
+          <div id="checklistCard" class="bg-white rounded-2xl p-7 shadow-soft border border-ivory-200/60">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <h3 id="checklistTitle" class="font-serif text-xl text-slate2-900">Your action items</h3>
+                <p id="checklistSubtitle" class="text-xs text-slate2-700/50 mt-1">Select an event type and generate to begin.</p>
+              </div>
+              <div id="checklistProgress" class="text-xs text-slate2-700/50 hidden">
+                <span id="doneCount">0</span> / <span id="totalCount">0</span> complete
+              </div>
+            </div>
+
+            <div id="checklistEmpty" class="py-12 text-center">
+              <div class="w-14 h-14 mx-auto rounded-2xl bg-ivory-100 grid place-items-center mb-4">
+                <i class="fa-regular fa-clipboard text-2xl text-slate2-700/30"></i>
+              </div>
+              <p class="text-slate2-700/50 text-sm">Your blueprint will appear here.</p>
+            </div>
+
+            <div id="checklistItems" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Budget + Upcoming -->
+        <div class="space-y-6">
+
+          <!-- Budget tracker -->
+          <div class="bg-slate2-900 text-ivory-50 rounded-2xl p-6 shadow-lift overflow-hidden relative">
+            <div class="absolute inset-0 opacity-20" style="background: radial-gradient(120% 80% at 90% 0%, #5C8C66, transparent 50%);"></div>
+            <div class="relative">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[11px] uppercase tracking-widest text-ivory-50/60">Culture Club · Q2</span>
+                <i class="fa-solid fa-piggy-bank text-sage-400"></i>
+              </div>
+              <div class="font-serif text-4xl mt-3 ticker" id="budgetRemaining">$2,850</div>
+              <div class="text-xs text-ivory-50/60 mt-1">remaining of $5,000</div>
+
+              <!-- progress -->
+              <div class="mt-5 h-2 rounded-full bg-white/10 overflow-hidden">
+                <div id="budgetBar" class="h-full bg-sage-400 rounded-full transition-all duration-1000" style="width: 0%"></div>
+              </div>
+              <div class="mt-2 flex items-center justify-between text-[11px] text-ivory-50/60">
+                <span>$2,150 spent</span>
+                <span>57% remaining</span>
+              </div>
+
+              <div class="mt-5 pt-5 border-t border-white/10 space-y-2.5">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-ivory-50/70 flex items-center gap-2"><i class="fa-solid fa-cake-candles text-[10px] text-blush-400"></i> Sasha's baby gift</span>
+                  <span class="ticker">$120</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-ivory-50/70 flex items-center gap-2"><i class="fa-solid fa-pizza-slice text-[10px] text-sage-400"></i> Q1 hybrid lunch</span>
+                  <span class="ticker">$840</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-ivory-50/70 flex items-center gap-2"><i class="fa-solid fa-truck text-[10px] text-sky2-400"></i> Moving baskets ×2</span>
+                  <span class="ticker">$190</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-ivory-50/70 flex items-center gap-2"><i class="fa-solid fa-mug-hot text-[10px] text-blush-400"></i> Virtual coffee mixer</span>
+                  <span class="ticker">$1,000</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming milestones -->
+          <div class="bg-white rounded-2xl p-6 shadow-soft border border-ivory-200/60">
+            <h3 class="font-serif text-lg text-slate2-900 mb-1">Upcoming moments</h3>
+            <p class="text-xs text-slate2-700/50 mb-4">From the milestone calendar</p>
+
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blush-100 text-blush-400 grid place-items-center"><i class="fa-solid fa-baby"></i></div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-semibold text-slate2-900">Sasha · new baby</div>
+                  <div class="text-xs text-slate2-700/50">Returns from leave · May 22</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-sage-100 text-sage-600 grid place-items-center"><i class="fa-solid fa-house"></i></div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-semibold text-slate2-900">Marcus · moving day</div>
+                  <div class="text-xs text-slate2-700/50">Burnaby → New West · May 24</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-sky2-100 text-sky2-500 grid place-items-center"><i class="fa-solid fa-ring"></i></div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-semibold text-slate2-900">Priya · wedding</div>
+                  <div class="text-xs text-slate2-700/50">Returns · June 3</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-ivory-200 text-slate2-700 grid place-items-center"><i class="fa-solid fa-cake-candles"></i></div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-semibold text-slate2-900">Jordan · 5-year @ CCS</div>
+                  <div class="text-xs text-slate2-700/50">June 14</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TAB 3: BENEFITS CALCULATOR ============ -->
+    <section id="tab-benefits" class="tab-view px-10 py-8">
+
+      <div class="mb-8">
+        <div class="text-xs uppercase tracking-widest text-slate2-700/50 mb-2">Admin Utility</div>
+        <h2 class="font-serif text-3xl text-slate2-900">Bilingual & benefits quick calculator.</h2>
+        <p class="text-slate2-700/70 mt-2 max-w-2xl">Answer an employee's "where do I stand?" question in under a minute — then send a warm, personal reply.</p>
+      </div>
+
+      <div class="grid grid-cols-5 gap-6">
+
+        <!-- Input form -->
+        <div class="col-span-2 bg-white rounded-2xl p-7 shadow-soft border border-ivory-200/60">
+          <h3 class="font-serif text-xl text-slate2-900 mb-1">Employee details</h3>
+          <p class="text-xs text-slate2-700/50 mb-6">All calculations prorate from CCS base entitlements.</p>
+
+          <div class="space-y-5">
+            <div>
+              <div class="field-label">Employee name</div>
+              <input id="empName" class="field" value="Priya Sharma" />
+            </div>
+
+            <div>
+              <div class="field-label">Language spoken</div>
+              <select id="empLang" class="field">
+                <option value="english">English Only</option>
+                <option value="bilingual" selected>Bilingual French / English</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="field-label">Months worked this year</div>
+              <input id="empMonths" type="number" min="1" max="12" value="8" class="field" />
+              <div class="text-[11px] text-slate2-700/50 mt-1.5 italic">Used to prorate annual entitlements (max 12)</div>
+            </div>
+
+            <div class="pt-2">
+              <button id="calcBtn" class="btn-primary w-full justify-center"><i class="fa-solid fa-calculator"></i> Calculate package</button>
+            </div>
+
+            <!-- Reference legend -->
+            <div class="mt-6 pt-5 border-t border-ivory-200 text-xs text-slate2-700/60 space-y-1.5">
+              <div class="font-semibold text-slate2-700 uppercase tracking-wider text-[10px] mb-2">CCS base entitlements</div>
+              <div class="flex justify-between"><span>Vacation</span><span class="ticker">15 days / yr</span></div>
+              <div class="flex justify-between"><span>CCS discretion days</span><span class="ticker">3 days / yr</span></div>
+              <div class="flex justify-between"><span>Sick / personal</span><span class="ticker">6 days / yr</span></div>
+              <div class="flex justify-between"><span>Bilingual credit</span><span class="ticker">$800 / yr</span></div>
+              <div class="flex justify-between"><span>Educational reimbursement</span><span class="ticker">up to $2,500</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results + Email -->
+        <div class="col-span-3 space-y-6">
+
+          <!-- Calculated package -->
+          <div class="bg-white rounded-2xl p-7 shadow-soft border border-ivory-200/60">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <h3 class="font-serif text-xl text-slate2-900">Calculated package</h3>
+                <p id="resultSubtitle" class="text-xs text-slate2-700/50 mt-1">For <span id="resultName">Priya Sharma</span></p>
+              </div>
+              <span class="text-[10px] px-2 py-1 rounded-full bg-sage-100 text-sage-700 font-semibold uppercase tracking-wider">Auto-calculated</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <div class="rounded-xl bg-ivory-50 p-4 border border-ivory-200">
+                <div class="text-[10px] uppercase tracking-widest text-slate2-700/50">Vacation</div>
+                <div class="mt-1 font-serif text-2xl text-slate2-900 ticker"><span id="resVacation">10.0</span> <span class="text-sm text-slate2-700/50">days</span></div>
+                <div class="text-[11px] text-slate2-700/50 mt-0.5">prorated</div>
+              </div>
+              <div class="rounded-xl bg-ivory-50 p-4 border border-ivory-200">
+                <div class="text-[10px] uppercase tracking-widest text-slate2-700/50">Discretion</div>
+                <div class="mt-1 font-serif text-2xl text-slate2-900 ticker"><span id="resDiscretion">2.0</span> <span class="text-sm text-slate2-700/50">days</span></div>
+                <div class="text-[11px] text-slate2-700/50 mt-0.5">prorated</div>
+              </div>
+              <div class="rounded-xl bg-ivory-50 p-4 border border-ivory-200">
+                <div class="text-[10px] uppercase tracking-widest text-slate2-700/50">Sick / Personal</div>
+                <div class="mt-1 font-serif text-2xl text-slate2-900 ticker">6.0 <span class="text-sm text-slate2-700/50">days</span></div>
+                <div class="text-[11px] text-slate2-700/50 mt-0.5">full allotment</div>
+              </div>
+            </div>
+
+            <!-- Bilingual + Education -->
+            <div class="grid grid-cols-2 gap-3 mt-3">
+              <div id="bilingualCard" class="rounded-xl p-4 border bg-sage-100/40 border-sage-200">
+                <div class="flex items-center justify-between">
+                  <div class="text-[10px] uppercase tracking-widest text-sage-700">Bilingual credit</div>
+                  <i id="bilingualIcon" class="fa-solid fa-circle-check text-sage-600"></i>
+                </div>
+                <div class="mt-1 flex items-baseline gap-2">
+                  <span class="font-serif text-2xl text-slate2-900 ticker" id="resBilingual">$800</span>
+                  <span class="text-xs font-semibold text-sage-700" id="bilingualLabel">Eligible</span>
+                </div>
+              </div>
+              <div class="rounded-xl p-4 border bg-sky2-100/40 border-sky2-100">
+                <div class="flex items-center justify-between">
+                  <div class="text-[10px] uppercase tracking-widest text-sky2-500">Education reimbursement</div>
+                  <i class="fa-solid fa-graduation-cap text-sky2-500"></i>
+                </div>
+                <div class="mt-1 flex items-baseline gap-2">
+                  <span class="font-serif text-2xl text-slate2-900 ticker">up to $2,500</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Draft email -->
+          <div class="bg-white rounded-2xl p-7 shadow-soft border border-ivory-200/60">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles ai-sparkle"></i>
+                <h3 class="font-serif text-xl text-slate2-900">Draft response email</h3>
+              </div>
+              <button id="copyBtn" class="btn-ghost text-xs"><i class="fa-regular fa-copy mr-1.5"></i> Copy</button>
+            </div>
+            <p class="text-xs text-slate2-700/50 mb-4 italic"><i class="fa-solid fa-circle-info mr-1"></i> A starting point — adjust the tone for the person before you hit send.</p>
+
+            <textarea id="emailDraft" rows="14" class="field font-serif leading-relaxed" style="font-size: 14.5px;"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="px-10 py-8 mt-4 border-t border-ivory-200/60 flex items-center justify-between text-xs text-slate2-700/50">
+      <div>
+        <span class="font-serif text-slate2-700">People & Culture Copilot Hub</span>
+        — Designed & developed by <span class="text-slate2-800 font-semibold">Rahul Mittal</span>.
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-sage-400 live-dot"></span>
+        Demo build · not connected to live HRIS
+      </div>
+    </footer>
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast"><i class="fa-solid fa-circle-check text-sage-400"></i> <span id="toastMsg">Done</span></div>
+
+<!-- ============ JAVASCRIPT ============ -->
+<script>
+  /* ---------- Tab switching ---------- */
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabViews = document.querySelectorAll('.tab-view');
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      tabBtns.forEach(b => b.dataset.active = (b === btn));
+      tabViews.forEach(v => v.classList.toggle('active', v.id === `tab-${target}`));
+      // Re-run on-enter animations for the active view
+      if (target === 'engagement') animateSentiment();
+      if (target === 'culture') animateBudget();
+    });
+  });
+
+  /* ---------- TAB 1: Sentiment bars ---------- */
+  const metrics = [
+    { label: 'Work-Life Balance',       value: 92, tone: '' },
+    { label: 'Team Belonging',          value: 88, tone: '' },
+    { label: 'Remote Alignment',        value: 85, tone: 'warn', note: '−3% vs last month' },
+    { label: 'Manager Support',         value: 90, tone: '' },
+    { label: 'Growth & Learning',       value: 84, tone: 'sky' },
+    { label: 'Recognition & Milestones',value: 87, tone: '' },
+  ];
+
+  function renderSentiment() {
+    const c = document.getElementById('sentimentBars');
+    c.innerHTML = metrics.map(m => `
+      <div>
+        <div class="flex items-end justify-between mb-2">
+          <div class="flex items-baseline gap-2">
+            <span class="text-sm font-medium text-slate2-800">${m.label}</span>
+            ${m.note ? `<span class="text-[11px] text-blush-400 font-semibold">${m.note}</span>` : ''}
+          </div>
+          <span class="font-serif text-lg text-slate2-900 ticker">${m.value}<span class="text-xs text-slate2-700/50">%</span></span>
+        </div>
+        <div class="meter-track">
+          <div class="meter-fill ${m.tone}" data-target="${m.value}"></div>
+        </div>
+      </div>
+    `).join('');
+    animateSentiment();
+  }
+
+  function animateSentiment() {
+    setTimeout(() => {
+      document.querySelectorAll('#sentimentBars .meter-fill').forEach(el => {
+        el.style.width = el.dataset.target + '%';
+      });
+    }, 100);
+  }
+
+  renderSentiment();
+
+  /* ---------- TAB 2: Event blueprints ---------- */
+  const blueprints = {
+    hybrid: {
+      title: 'Hybrid Team Bonding',
+      subtitle: 'Inclusive of in-office and remote teammates.',
+      items: [
+        'Reserve hybrid-friendly venue near New Westminster office',
+        'Set up virtual breakout rooms for remote teammates',
+        'Plan an inclusive icebreaker (mixed in-person + remote groups)',
+        'Coordinate catering with dietary preferences confirmed',
+        'Send calendar invite ≥ 2 weeks in advance',
+        'Prepare digital and physical welcome packs',
+        'Assign a remote "buddy" host to keep virtual folks engaged',
+      ],
+    },
+    moving: {
+      title: 'Milestone: Employee Moving',
+      subtitle: 'Make moving day feel supported, not stressful.',
+      items: [
+        'Allocate a paid day off for moving day',
+        'Dispatch the CCS welcome-home gift basket',
+        'Send a team Slack announcement (with their permission)',
+        'Update employee address in the HRIS',
+        'Coordinate a handwritten note from their manager',
+        'Offer remote-work flexibility during the transition week',
+      ],
+    },
+    marriage: {
+      title: 'Milestone: Marriage / New Child',
+      subtitle: 'Celebrate the moment that matters most to them.',
+      items: [
+        'Confirm leave entitlements (parental or marriage)',
+        'Send a personalized celebration card signed by the team',
+        'Arrange a thoughtful gift (registry-based for newborn, choice voucher for marriage)',
+        'Schedule a warm welcome-back conversation post-leave',
+        'Add the milestone to the internal CCS calendar',
+        'Loop in the Social Society for a team toast',
+      ],
+    },
+    annual: {
+      title: 'Annual Performance Celebration',
+      subtitle: 'Honour the year with intention and gratitude.',
+      items: [
+        'Book venue or hybrid platform with strong A/V coverage',
+        'Prepare individual recognition cards for each team member',
+        'Coordinate executive remarks aligned with "We Help. We Educate. We Give Hope."',
+        'Curate a playlist and a photo retrospective from the year',
+        'Arrange catering with bilingual menu signage',
+        'Capture moments for the internal CCS newsletter',
+        'Plan a quiet-room option for neurodivergent teammates',
+      ],
+    },
+  };
+
+  const genBtn = document.getElementById('generateBtn');
+  const checklistTitle = document.getElementById('checklistTitle');
+  const checklistSubtitle = document.getElementById('checklistSubtitle');
+  const checklistItems = document.getElementById('checklistItems');
+  const checklistEmpty = document.getElementById('checklistEmpty');
+  const checklistProgress = document.getElementById('checklistProgress');
+  const doneCountEl = document.getElementById('doneCount');
+  const totalCountEl = document.getElementById('totalCount');
+
+  function updateProgress() {
+    const total = checklistItems.querySelectorAll('.check-item').length;
+    const done = checklistItems.querySelectorAll('.check-item.done').length;
+    doneCountEl.textContent = done;
+    totalCountEl.textContent = total;
+  }
+
+  genBtn.addEventListener('click', () => {
+    const type = document.getElementById('eventType').value;
+    const bp = blueprints[type];
+    checklistEmpty.style.display = 'none';
+    checklistProgress.classList.remove('hidden');
+    checklistTitle.textContent = bp.title;
+    checklistSubtitle.textContent = bp.subtitle;
+    checklistItems.innerHTML = bp.items.map((text, i) => `
+      <div class="check-item" style="animation-delay: ${i * 60}ms">
+        <div class="cb"><i class="fa-solid fa-check"></i></div>
+        <span class="label text-sm text-slate2-800 flex-1">${text}</span>
+        <i class="fa-regular fa-circle-question text-slate2-700/30 text-xs"></i>
+      </div>
+    `).join('');
+    checklistItems.querySelectorAll('.check-item').forEach(item => {
+      item.addEventListener('click', () => {
+        item.classList.toggle('done');
+        updateProgress();
+      });
+    });
+    updateProgress();
+    showToast('Blueprint ready — review before sharing.');
+  });
+
+  function animateBudget() {
+    setTimeout(() => {
+      document.getElementById('budgetBar').style.width = '57%';
+    }, 100);
+  }
+
+  /* ---------- TAB 3: Benefits calculator ---------- */
+  const calcBtn = document.getElementById('calcBtn');
+  const empName = document.getElementById('empName');
+  const empLang = document.getElementById('empLang');
+  const empMonths = document.getElementById('empMonths');
+
+  const resName = document.getElementById('resultName');
+  const resVacation = document.getElementById('resVacation');
+  const resDiscretion = document.getElementById('resDiscretion');
+  const resBilingual = document.getElementById('resBilingual');
+  const bilingualLabel = document.getElementById('bilingualLabel');
+  const bilingualCard = document.getElementById('bilingualCard');
+  const bilingualIcon = document.getElementById('bilingualIcon');
+  const emailDraft = document.getElementById('emailDraft');
+
+  function calculate() {
+    const name = empName.value.trim() || 'Team member';
+    const lang = empLang.value;
+    let months = Math.max(0, Math.min(12, parseFloat(empMonths.value) || 0));
+
+    const vacation = +(15 * months / 12).toFixed(1);
+    const discretion = +(3 * months / 12).toFixed(1);
+    const bilingualEligible = lang === 'bilingual';
+
+    resName.textContent = name;
+    resVacation.textContent = vacation.toFixed(1);
+    resDiscretion.textContent = discretion.toFixed(1);
+
+    if (bilingualEligible) {
+      resBilingual.textContent = '$800';
+      bilingualLabel.textContent = 'Eligible';
+      bilingualCard.classList.remove('bg-ivory-50','border-ivory-200');
+      bilingualCard.classList.add('bg-sage-100/40','border-sage-200');
+      bilingualIcon.className = 'fa-solid fa-circle-check text-sage-600';
+    } else {
+      resBilingual.textContent = '—';
+      bilingualLabel.textContent = 'Not applicable';
+      bilingualCard.classList.remove('bg-sage-100/40','border-sage-200');
+      bilingualCard.classList.add('bg-ivory-50','border-ivory-200');
+      bilingualIcon.className = 'fa-regular fa-circle text-slate2-700/30';
+    }
+
+    // Draft email
+    const firstName = name.split(' ')[0];
+    const bilingualLine = bilingualEligible
+      ? `• Bilingual credit: you're eligible for the full $800 — let me know when you'd like that processed.`
+      : `• Bilingual credit: not applicable right now, but if anything changes on the language front, just say the word.`;
+
+    emailDraft.value =
+`Hi ${firstName},
+
+Thanks so much for reaching out — happy to walk you through where you stand.
+
+Based on your ${months} month${months === 1 ? '' : 's'} with CCS this year, here's a quick snapshot:
+
+• Vacation: ${vacation.toFixed(1)} prorated days (of 15 annual)
+• CCS discretion days: ${discretion.toFixed(1)} prorated days (of 3 annual)
+• Sick / personal: 6 days (full annual allotment — not prorated)
+${bilingualLine}
+• Educational reimbursement: up to $2,500 available for approved courses — happy to help you scope something out.
+
+A friendly reminder that we also celebrate the bigger life moments — moves, marriages, new family members — so please keep us posted on the good stuff outside of work too.
+
+Let me know if any of this raises questions, or if you'd rather grab a coffee in the New West office to chat it through.
+
+Warmly,
+Alex
+People & Culture, CCS`;
+
+    showToast(`Package calculated for ${firstName}.`);
+  }
+
+  calcBtn.addEventListener('click', calculate);
+  calculate(); // initial run
+
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    emailDraft.select();
+    navigator.clipboard.writeText(emailDraft.value).then(() => {
+      showToast('Email draft copied to clipboard.');
+    });
+  });
+
+  /* ---------- Toast ---------- */
+  const toast = document.getElementById('toast');
+  const toastMsg = document.getElementById('toastMsg');
+  let toastTimeout;
+  function showToast(msg) {
+    toastMsg.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toast.classList.remove('show'), 2400);
+  }
+</script>
+
+</body>
+</html>
